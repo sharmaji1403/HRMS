@@ -28,7 +28,6 @@ const getEmployee = async (req, res) => {
     }
 }
 
-module.exports = getEmployee;
 
 
 
@@ -75,7 +74,7 @@ const createEmployee = async (req, res) => {
         return res.status(500).json({ error: "failed to create employee" })
     }
 }
-module.exports = createEmployee;
+
 
 
 
@@ -120,7 +119,7 @@ const updateEmployee = async (req, res) => {
         return res.status(500).json({ error: "failed to create employee" })
     }
 }
-module.exports = updateEmployee;
+
 
 
 
@@ -140,5 +139,6 @@ const deleteEmployee = async (req, res) => {
         return res.status(500).json({error : "Failed to delete employee"});
     }
  }
-module.exports = deleteEmployees;
 
+
+module.exports = { getEmployee, createEmployee, updateEmployee, deleteEmployee }

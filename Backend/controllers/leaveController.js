@@ -98,7 +98,7 @@ const getLeaves = async (req, res) => {
 
 // 3. Update Leave Status (Admin — Approve/Reject)
 // PATCH /api/leaves/:id
-const updateLeave = async (req, res) => {
+const updateLeaveStatus = async (req, res) => {
     try {
         const { id } = req.params
         const { status } = req.body
@@ -129,4 +129,4 @@ const updateLeave = async (req, res) => {
     }
 }
 
-module.exports = { createLeave, getLeaves, updateLeave }
+module.exports = { createLeave, getLeaves, updateLeaveStatus: updateLeaveStatus }

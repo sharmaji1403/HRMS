@@ -6,6 +6,8 @@ const authRouter = require('./routes/authRoutes')
 const employeeRouter = require('./routes/EmployeeRoutes')
 const profileRouter = require('./routes/profileRoutes')
 const attendanceRouter = require('./routes/attendanceRoutes')
+const leaveRouter = require('./routes/leaveRoutes')
+const { dashboardRouter } = require('./routes/dashboardRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 8000
@@ -23,6 +25,8 @@ app.use("/api/auth" , authRouter);
 app.use("/api/employees" , employeeRouter);
 app.use("/api/profile" , profileRouter);
 app.use("/api/attendance" , attendanceRouter)
+app.use("/api/leaves", leaveRouter) 
+app.use("/api/dashboard", dashboardRouter)
 
 const startServer = async () => {
   await connectionDB()

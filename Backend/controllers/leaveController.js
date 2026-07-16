@@ -44,9 +44,9 @@ const createLeave = async (req, res) => {
 
         await inngest.send({
             name: "leave/pending",
-            date: {leaveApplicationId : leave._id,}
+            data: {leaveApplicationId : leave._id,}
         })
-        
+
         return res.status(201).json({ success: true, leave })
 
     } catch (error) {
@@ -63,14 +63,14 @@ const getLeaves = async (req, res) => {
         const isAdmin = session.role === "ADMIN";
         // Admin — sab leaves
         if (isAdmin) {
-            const { status } = req.query.status;
+            const { status } = req.query;
             const where = status ? {status} : {};
 
             const leaves = await LeaveApplication.find(where)
                 .populate("employeeId", "firstName lastName department position")
                 .sort({ createdAt: -1 });
                 const data = leaves.map((l)=> {
-                    const obj = l.toobject();
+                    const obj = l.toObject();
                     return{
                         ...obj,
                         id: obj._id.toString(),

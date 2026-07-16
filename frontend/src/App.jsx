@@ -9,7 +9,7 @@ import Attendance from './Pages/Attendance'
 import Settings from './Pages/Settings'
 import Payslips from './Pages/Payslips'
 import Leave from './Pages/Leave'
-import PrintPayslip from './Pages/PrintPayslip'
+import PrintPaySlip from './Pages/PrintPaySlip'
 import { Navigate } from 'react-router-dom'
 import LoginForm from './components/LoginForm'
 
@@ -35,8 +35,7 @@ const App = () => {
       <Route path="/payslips" element={<Payslips />} />
       <Route path="/leave" element={<Leave />} />
       </Route>
-      <Route path = "/print/payslip/:id" element = { <PrintPayslip />} />
-
+     <Route path="/print/payslip/:id" element={<PrintPaySlip />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
    </>

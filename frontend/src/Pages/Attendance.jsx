@@ -1,11 +1,49 @@
 import { ClockIcon } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { dummyAttendanceData } from "../assets/assets"
+import Loading from "../components/Loading"
 
-const dummyAttendance = [
-  { _id: 1, date: "Mar 15, 2026", checkIn: "04:12 PM", checkOut: "12:12 AM", hours: "8h 0m", type: "Full Day", status: "PRESENT" },
-  { _id: 2, date: "Mar 13, 2026", checkIn: "07:18 PM", checkOut: "03:18 AM", hours: "8h 0m", type: "Full Day", status: "PRESENT" },
-]
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const dd = String(date.getDate()).padStart(2, "0")
+  const mm = months[date.getMonth()]
+  const yyyy = date.getFullYear()
+  return `${dd} ${mm} ${yyyy}`
+}
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return "-"
+  const [hour, min] = timeStr.split(":").map(Number)
+  const ampm = hour >= 12 ? "PM" : "AM"
+  const h = hour % 12 || 12
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")} ${ampm}`
+}
 
 const Attendance = () => {
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchData = useCallback(async () => {
+    setHistory(dummyAttendanceData)
+    setTimeout(() => {
+      setLoading(false)
+    }, 1000)
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  if (loading) return <Loading />
+
+  const daysPresent = history.filter(a => a.status === "PRESENT").length
+  const lateArrivals = history.filter(a => a.Late === true).length
+  const avgHours = history.length > 0
+    ? (history.reduce((sum, a) => sum + (a.workingHours || 0), 0) / history.length).toFixed(1)
+    : "0"
+
   return (
     <div className="animate-fade-in">
       {/* Header */}
@@ -17,9 +55,9 @@ const Attendance = () => {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Days Present", value: "2" },
-          { label: "Late Arrivals", value: "0" },
-          { label: "Avg. Work Hrs", value: "8.5 Hrs" },
+          { label: "Days Present", value: daysPresent },
+          { label: "Late Arrivals", value: lateArrivals },
+          { label: "Avg. Work Hrs", value: `${avgHours} Hrs` },
         ].map((s) => (
           <div key={s.label} className="card p-5 text-center">
             <p className="text-2xl font-semibold text-slate-800">{s.value}</p>
@@ -57,15 +95,17 @@ const Attendance = () => {
             </tr>
           </thead>
           <tbody>
-            {dummyAttendance.map((a) => (
+            {history.map((a) => (
               <tr key={a._id}>
-                <td className="text-slate-600">{a.date}</td>
-                <td className="text-slate-600">{a.checkIn}</td>
-                <td className="text-slate-600">{a.checkOut}</td>
-                <td className="text-slate-600">{a.hours}</td>
-                <td className="text-slate-600">{a.type}</td>
+                <td className="text-slate-600">{formatDate(a.date)}</td>
+                <td className="text-slate-600">{formatTime(a.checkIn)}</td>
+                <td className="text-slate-600">{formatTime(a.checkOut)}</td>
+                <td>{a.workingHours} Hrs</td>
+                <td>{a.dayType}</td>
                 <td>
-                  <span className="badge badge-success">{a.status}</span>
+                  <span className={`badge ${a.status === "PRESENT" ? "badge-success" : "badge-danger"}`}>
+                    {a.status}
+                  </span>
                 </td>
               </tr>
             ))}

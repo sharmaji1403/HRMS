@@ -1,3 +1,4 @@
+const { inngest } = require("../inngest")
 const Attendance = require("../models/Attendance")
 const Employee = require("../models/Employee")
 
@@ -35,11 +36,18 @@ const clockIn = async (req, res) => {
                 checkIn: now,
                 status: isLate ? "LATE" : "PRESENT"
             })
+            await inngest.send({
+                name: "employee/check-out",
+                data: {
+                    employeeId: employee._id,
+                    attendanceId : attendance._id
+                }
+            })
             return res.status(201).json({ success: true, type: "CHECK_IN", data: attendance })
         }
 
         // ── Already Clocked Out ───────────────────────────────
-        if (existing.checkOut) {
+        else if (existing.checkOut) {
             return res.status(400).json({ error: "Already clocked out for today" })
         }
 

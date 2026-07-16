@@ -1,5 +1,6 @@
 const { LeaveApplication } = require("../models/LeaveApplication")
 const Employee = require("../models/Employee")
+const { inngest } = require("../inngest")
 
 // 1. Create Leave
 // POST /api/leaves
@@ -41,6 +42,11 @@ const createLeave = async (req, res) => {
             status: "PENDING"
         })
 
+        await inngest.send({
+            name: "leave/pending",
+            date: {leaveApplicationId : leave._id,}
+        })
+        
         return res.status(201).json({ success: true, leave })
 
     } catch (error) {

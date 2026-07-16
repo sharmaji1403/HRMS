@@ -1,4 +1,4 @@
-const { LeaveApplication } = require("../models/LeaveApplication")
+const { LeaveApplication } = require("../models/leaveApplication")
 const Employee = require("../models/Employee")
 const { inngest } = require("../inngest")
 
@@ -43,9 +43,15 @@ const createLeave = async (req, res) => {
         })
 
         await inngest.send({
-            name: "leave/pending",
-            data: {leaveApplicationId : leave._id,}
-        })
+    name: "leave/pending",
+    data: {
+        leaveApplicationId: leave._id.toString(),
+        employeeName: `${employee.firstName} ${employee.lastName}`,
+        leaveType: type,
+        startDate,
+        endDate
+    }
+})
 
         return res.status(201).json({ success: true, leave })
 

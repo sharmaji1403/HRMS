@@ -1,7 +1,7 @@
 const { DEPARTMENTS } = require("../constants/department");
 const Attendance = require("../models/Attendance");
 const Employee = require("../models/Employee");
-const { LeaveApplication } = require("../models/LeaveApplication");
+const { LeaveApplication } = require("../models/leaveApplication");
 
 
 // Get dashboard for employee and admin

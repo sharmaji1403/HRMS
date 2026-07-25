@@ -8,6 +8,8 @@ const profileRouter = require('./routes/profileRoutes')
 const attendanceRouter = require('./routes/attendanceRoutes')
 const leaveRouter = require('./routes/leaveRoutes')
 const { dashboardRouter } = require('./routes/dashboardRoutes')
+const payslipRouter = require('./routes/payslipRoutes')
+
 
 const { serve } = require("inngest/express");
 const { inngest, functions } = require("./inngest/index");
@@ -30,6 +32,7 @@ app.use("/api/profile" , profileRouter);
 app.use("/api/attendance" , attendanceRouter)
 app.use("/api/leaves", leaveRouter) 
 app.use("/api/dashboard", dashboardRouter)
+app.use("/api/payslips", payslipRouter)
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
 

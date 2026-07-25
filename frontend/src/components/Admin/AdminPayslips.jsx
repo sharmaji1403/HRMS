@@ -1,38 +1,32 @@
-import { DownloadIcon, PlusIcon, XIcon } from "lucide-react"
-import { useState } from "react"
-import { dummyEmployeeData } from "../../assets/assets"
+import { PlusIcon, PrinterIcon, XIcon } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import toast from "react-hot-toast"
+import api from "../../api/axios"
 
 const months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
 
 // ── Generate Payslip Modal ───────────────────────────────────
-const GeneratePayslipModal = ({ onClose, onGenerate }) => {
+const GeneratePayslipModal = ({ employees, onClose, onGenerate }) => {
   const [form, setForm] = useState({
-    employeeId: dummyEmployeeData[0]._id,
-    month: "1",
+    employeeId: employees[0]?.id || "",
+    month: String(new Date().getMonth() + 1),
     year: new Date().getFullYear().toString(),
     basicSalary: "",
     allowances: "",
     deductions: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
   const netSalary = (Number(form.basicSalary) + Number(form.allowances) - Number(form.deductions)) || 0
 
-  const handleSubmit = () => {
-    if (!form.basicSalary) return
-    const emp = dummyEmployeeData.find(e => e._id === form.employeeId)
-    onGenerate({
-      _id: Date.now(),
-      employee: emp,
-      month: Number(form.month),
-      year: Number(form.year),
-      basicSalary: Number(form.basicSalary),
-      allowances: Number(form.allowances),
-      deductions: Number(form.deductions),
-      netSalary,
-    })
-    onClose()
+  const handleSubmit = async () => {
+    if (!form.employeeId || !form.basicSalary) return
+    setSubmitting(true)
+    await onGenerate(form)
+    setSubmitting(false)
   }
 
   return (
@@ -46,19 +40,17 @@ const GeneratePayslipModal = ({ onClose, onGenerate }) => {
         </div>
 
         <div className="space-y-3">
-          {/* Employee */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Employee</label>
             <select name="employeeId" value={form.employeeId} onChange={handleChange}>
-              {dummyEmployeeData.map(emp => (
-                <option key={emp._id} value={emp._id}>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>
                   {emp.firstName} {emp.lastName}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Month + Year */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Month</label>
@@ -74,7 +66,6 @@ const GeneratePayslipModal = ({ onClose, onGenerate }) => {
             </div>
           </div>
 
-          {/* Salary Fields */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Basic Salary ($)</label>
             <input type="number" name="basicSalary" value={form.basicSalary} onChange={handleChange} placeholder="2000" />
@@ -90,7 +81,6 @@ const GeneratePayslipModal = ({ onClose, onGenerate }) => {
             </div>
           </div>
 
-          {/* Net Salary Preview */}
           <div className="bg-indigo-50 rounded-lg px-4 py-3 flex items-center justify-between">
             <p className="text-sm text-slate-600">Net Salary</p>
             <p className="text-lg font-semibold text-indigo-600">${netSalary.toLocaleString()}</p>
@@ -99,7 +89,9 @@ const GeneratePayslipModal = ({ onClose, onGenerate }) => {
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
-          <button onClick={handleSubmit} className="flex-1 btn-primary">Generate</button>
+          <button onClick={handleSubmit} disabled={submitting} className="flex-1 btn-primary disabled:opacity-50">
+            {submitting ? "Generating..." : "Generate"}
+          </button>
         </div>
       </div>
     </div>
@@ -107,17 +99,37 @@ const GeneratePayslipModal = ({ onClose, onGenerate }) => {
 }
 
 // ── Admin Payslips Page ──────────────────────────────────────
-const AdminPayslips = ({ payslips }) => {
-  const [payslipList, setPayslipList] = useState(payslips)
+const AdminPayslips = ({ payslips, onRefresh }) => {
   const [showModal, setShowModal] = useState(false)
+  const [employees, setEmployees] = useState([])
+  const navigate = useNavigate()
 
-  const handleGenerate = (newPayslip) => {
-    setPayslipList(prev => [newPayslip, ...prev])
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const res = await api.get("/employees")
+      setEmployees(res.data)
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [fetchEmployees])
+
+  const handleGenerate = async (form) => {
+    try {
+      await api.post("/payslips", form)
+      toast.success("Payslip generated successfully!")
+      setShowModal(false)
+      onRefresh()
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    }
   }
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-800">Payslips</h1>
@@ -132,7 +144,6 @@ const AdminPayslips = ({ payslips }) => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <table className="w-full">
           <thead>
@@ -141,34 +152,47 @@ const AdminPayslips = ({ payslips }) => {
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Period</th>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Basic Salary</th>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Net Salary</th>
+              <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Status</th>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-4">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {payslipList.map((slip) => {
-              const emp = Array.isArray(slip.employee) ? slip.employee[0] : slip.employee
-              return (
-                <tr key={slip._id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-800">{emp?.firstName} {emp?.lastName}</td>
-                  <td className="px-6 py-4 text-indigo-500">{months[slip.month - 1]} {slip.year}</td>
-                  <td className="px-6 py-4 text-slate-600">${slip.basicSalary?.toLocaleString()}</td>
-                  <td className="px-6 py-4 font-semibold text-slate-800">${slip.netSalary?.toLocaleString()}</td>
-                  <td className="px-6 py-4">
-                    <button className="inline-flex items-center gap-1.5 text-sm text-indigo-600 border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-                      <DownloadIcon size={14} />
-                      Download
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
+            {payslips.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center text-slate-400 py-8">No payslips found</td>
+              </tr>
+            ) : (
+              payslips.map((slip) => {
+                const emp = slip.employee
+                return (
+                  <tr key={slip.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-800">{emp?.firstName} {emp?.lastName}</td>
+                    <td className="px-6 py-4 text-indigo-500">{months[slip.month - 1]} {slip.year}</td>
+                    <td className="px-6 py-4 text-slate-600">${slip.basicSalary?.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-800">${slip.netSalary?.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <span className={`badge ${slip.status === "PAID" ? "badge-success" : "badge-warning"}`}>{slip.status}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => navigate(`/print/payslip/${slip.id}`, { state: { slip } })}
+                        className="inline-flex items-center gap-1.5 text-sm text-indigo-600 border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <PrinterIcon size={14} />
+                        Print
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Generate Modal */}
       {showModal && (
         <GeneratePayslipModal
+          employees={employees}
           onClose={() => setShowModal(false)}
           onGenerate={handleGenerate}
         />

@@ -1,5 +1,7 @@
-import { PlusIcon, XIcon, CalendarIcon } from "lucide-react"
+import { PlusIcon, XIcon } from "lucide-react"
 import { useState } from "react"
+import toast from "react-hot-toast"
+import api from "../../api/axios"
 
 const statusStyles = {
   APPROVED: "badge-success",
@@ -14,20 +16,22 @@ const formatDate = (d) => {
 }
 
 // ── Apply Leave Modal ────────────────────────────────────────
-const ApplyLeaveModal = ({ onClose, onApply }) => {
+const ApplyLeaveModal = ({ onClose, onSubmit }) => {
   const [form, setForm] = useState({
     type: "CASUAL",
     startDate: "",
     endDate: "",
     reason: ""
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.startDate || !form.endDate || !form.reason) return
-    onApply({ ...form, _id: Date.now(), status: "PENDING" })
-    onClose()
+    setSubmitting(true)
+    await onSubmit(form)
+    setSubmitting(false)
   }
 
   return (
@@ -41,7 +45,6 @@ const ApplyLeaveModal = ({ onClose, onApply }) => {
         </div>
 
         <div className="space-y-3">
-          {/* Leave Type */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Leave Type</label>
             <select name="type" value={form.type} onChange={handleChange}>
@@ -49,7 +52,6 @@ const ApplyLeaveModal = ({ onClose, onApply }) => {
             </select>
           </div>
 
-          {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Start Date</label>
@@ -61,7 +63,6 @@ const ApplyLeaveModal = ({ onClose, onApply }) => {
             </div>
           </div>
 
-          {/* Reason */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Reason</label>
             <textarea
@@ -76,7 +77,9 @@ const ApplyLeaveModal = ({ onClose, onApply }) => {
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
-          <button onClick={handleSubmit} className="flex-1 btn-primary">Submit</button>
+          <button onClick={handleSubmit} disabled={submitting} className="flex-1 btn-primary disabled:opacity-50">
+            {submitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </div>
     </div>
@@ -84,20 +87,24 @@ const ApplyLeaveModal = ({ onClose, onApply }) => {
 }
 
 // ── Employee Leave Page ──────────────────────────────────────
-const EmployeeLeave = ({ leaves, showModal, setShowModal }) => {
-  const [localLeaves, setLocalLeaves] = useState(leaves)
+const EmployeeLeave = ({ leaves, showModal, setShowModal, onRefresh }) => {
+  const sickCount = leaves.filter(l => l.type === "SICK" && l.status === "APPROVED").length
+  const casualCount = leaves.filter(l => l.type === "CASUAL" && l.status === "APPROVED").length
+  const annualCount = leaves.filter(l => l.type === "ANNUAL" && l.status === "APPROVED").length
 
-  const sickCount = localLeaves.filter(l => l.type === "SICK" && l.status === "APPROVED").length
-  const casualCount = localLeaves.filter(l => l.type === "CASUAL" && l.status === "APPROVED").length
-  const annualCount = localLeaves.filter(l => l.type === "ANNUAL" && l.status === "APPROVED").length
-
-  const handleApply = (newLeave) => {
-    setLocalLeaves(prev => [newLeave, ...prev])
+  const handleApply = async (form) => {
+    try {
+      await api.post("/leaves", form)
+      toast.success("Leave applied successfully!")
+      setShowModal(false)
+      onRefresh()
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    }
   }
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="page-title">Leave Management</h1>
@@ -114,11 +121,11 @@ const EmployeeLeave = ({ leaves, showModal, setShowModal }) => {
       {/* Leave Summary Cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Sick Leave", value: sickCount, color: "text-rose-600", bg: "bg-rose-50" },
-          { label: "Casual Leave", value: casualCount, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Annual Leave", value: annualCount, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { label: "Sick Leave", value: sickCount, color: "text-rose-600" },
+          { label: "Casual Leave", value: casualCount, color: "text-amber-600" },
+          { label: "Annual Leave", value: annualCount, color: "text-indigo-600" },
         ].map((s) => (
-          <div key={s.label} className={`card p-5 text-center`}>
+          <div key={s.label} className="card p-5 text-center">
             <p className={`text-2xl font-semibold ${s.color}`}>{s.value}</p>
             <p className="text-xs text-slate-500 mt-1">{s.label}</p>
             <p className="text-xs text-slate-400">taken</p>
@@ -141,12 +148,12 @@ const EmployeeLeave = ({ leaves, showModal, setShowModal }) => {
             </tr>
           </thead>
           <tbody>
-            {localLeaves.length === 0 ? (
+            {leaves.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center text-slate-400 py-8">No leave records found</td>
               </tr>
             ) : (
-              localLeaves.map((leave) => (
+              leaves.map((leave) => (
                 <tr key={leave._id}>
                   <td><span className="badge bg-slate-100 text-slate-600">{leave.type}</span></td>
                   <td className="text-slate-500">{formatDate(leave.startDate)} – {formatDate(leave.endDate)}</td>
@@ -159,11 +166,10 @@ const EmployeeLeave = ({ leaves, showModal, setShowModal }) => {
         </table>
       </div>
 
-      {/* Apply Leave Modal */}
       {showModal && (
         <ApplyLeaveModal
           onClose={() => setShowModal(false)}
-          onApply={handleApply}
+          onSubmit={handleApply}
         />
       )}
     </div>

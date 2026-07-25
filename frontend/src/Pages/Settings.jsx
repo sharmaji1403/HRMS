@@ -1,10 +1,12 @@
 import AdminSettings from "../components/Admin/AdminSettings"
 import EmployeeSettings from "../components/Employee/EmployeeSettings"
+import { useAuth } from "../Context/authContext"
 
 const Settings = () => {
-  const role = "EMPLOYEE" // "ADMIN" ya "EMPLOYEE"
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN"
 
-  if (role === "ADMIN") return <AdminSettings />
+  if (isAdmin) return <AdminSettings />
   return <EmployeeSettings />
 }
 

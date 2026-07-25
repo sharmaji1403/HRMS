@@ -9,10 +9,10 @@ const User = require("../models/User");
 const getEmployee = async (req, res) => {
     try {
         const { department } = req.query;
-        const where = {};
+        const where = { isDeleted: { $ne: true } }; 
         if (department) where.department = department;
 
-        const employee = (await Employee.find(where))
+        const employee = await Employee.find(where)
             .sort({ createdAt: -1 })
             .populate("userId", "email role")
             .lean();
@@ -83,8 +83,9 @@ const createEmployee = async (req, res) => {
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
+        // ✅ joinDate destructure mein add karo
         const { firstName, lastName, email, phone, position, department, basicSalary,
-            allowances, deductions, password, role, bio , employmentStatus } = req.body
+            allowances, deductions, password, role, bio, employmentStatus, joinDate } = req.body
 
         const employee = await Employee.findById(id);
         if (!employee) return res.status(404).json({ error: "Employee not found" })
@@ -101,10 +102,10 @@ const updateEmployee = async (req, res) => {
             deductions: Number(deductions) || 0,
             employmentStatus : employmentStatus || "ACTIVE",
             bio: bio || " ",
+            joinDate: joinDate ? new Date(joinDate) : employee.joinDate,  // ✅ yeh add karo
         })
 
         // Update User record
-
         const userUpdate = { email}
         if(role) userUpdate.role = role;
         if(password) userUpdate.password = await bcrypt.hash(password , 10);
@@ -116,11 +117,10 @@ const updateEmployee = async (req, res) => {
         if (error.code === 11000) {
             return res.status(400).json({ error: "Email Already exists" })
         }
-        return res.status(500).json({ error: "failed to create employee" })
+        console.error("Update employee error:", error)
+        return res.status(500).json({ error: "failed to update employee" })
     }
 }
-
-
 
 
 // Delete employee

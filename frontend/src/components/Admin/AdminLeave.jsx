@@ -1,5 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { useState } from "react"
+import toast from "react-hot-toast"
+import api from "../../api/axios"
 
 const statusStyles = {
   APPROVED: "badge-success",
@@ -13,21 +15,16 @@ const formatDate = (d) => {
   return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
 }
 
-// ── Employee Row with Accordion ──────────────────────────────
 const LeaveRow = ({ leave, onApprove, onReject, allLeaves }) => {
   const [expanded, setExpanded] = useState(false)
+  const emp = leave.employee
 
-  const emp = Array.isArray(leave.employee) ? leave.employee[0] : leave.employee
-
-  // Us employee ki poori leave history
-  const empHistory = allLeaves.filter(l => {
-    const e = Array.isArray(l.employee) ? l.employee[0] : l.employee
-    return e?._id === emp?._id && l._id !== leave._id
-  })
+  const empHistory = allLeaves.filter(l =>
+    l.employee?._id === emp?._id && l._id !== leave._id
+  )
 
   return (
     <>
-      {/* Main Row */}
       <tr
         className="cursor-pointer hover:bg-slate-50/50 transition-colors duration-150"
         onClick={() => setExpanded(!expanded)}
@@ -51,13 +48,13 @@ const LeaveRow = ({ leave, onApprove, onReject, allLeaves }) => {
             {leave.status === "PENDING" && (
               <>
                 <button
-                  onClick={(e) => { e.stopPropagation(); onApprove(leave._id) }}
+                  onClick={(e) => { e.stopPropagation(); onApprove(leave.id) }}
                   className="btn-secondary text-xs py-1 px-3"
                 >
                   Approve
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); onReject(leave._id) }}
+                  onClick={(e) => { e.stopPropagation(); onReject(leave.id) }}
                   className="text-xs py-1 px-3 rounded-md border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors"
                 >
                   Reject
@@ -72,7 +69,6 @@ const LeaveRow = ({ leave, onApprove, onReject, allLeaves }) => {
         </td>
       </tr>
 
-      {/* Accordion — Employee Leave History */}
       {expanded && (
         <tr>
           <td colSpan={6} className="bg-slate-50/80 px-6 py-4 border-b border-slate-100">
@@ -114,20 +110,25 @@ const LeaveRow = ({ leave, onApprove, onReject, allLeaves }) => {
   )
 }
 
-// ── Admin Leave Page ─────────────────────────────────────────
-const AdminLeave = ({ leaves }) => {
-  const [leaveList, setLeaveList] = useState(leaves)
-
-  const handleApprove = (id) => {
-    setLeaveList(prev =>
-      prev.map(l => l._id === id ? { ...l, status: "APPROVED" } : l)
-    )
+const AdminLeave = ({ leaves, onRefresh }) => {
+  const handleApprove = async (id) => {
+    try {
+      await api.patch(`/leaves/${id}`, { status: "APPROVED" })
+      toast.success("Leave approved")
+      onRefresh()
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    }
   }
 
-  const handleReject = (id) => {
-    setLeaveList(prev =>
-      prev.map(l => l._id === id ? { ...l, status: "REJECTED" } : l)
-    )
+  const handleReject = async (id) => {
+    try {
+      await api.patch(`/leaves/${id}`, { status: "REJECTED" })
+      toast.success("Leave rejected")
+      onRefresh()
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    }
   }
 
   return (
@@ -150,15 +151,21 @@ const AdminLeave = ({ leaves }) => {
             </tr>
           </thead>
           <tbody>
-            {leaveList.map((leave) => (
-              <LeaveRow
-                key={leave._id}
-                leave={leave}
-                allLeaves={leaveList}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
-            ))}
+            {leaves.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center text-slate-400 py-8">No leave applications found</td>
+              </tr>
+            ) : (
+              leaves.map((leave) => (
+                <LeaveRow
+                  key={leave._id}
+                  leave={leave}
+                  allLeaves={leaves}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                />
+              ))
+            )}
           </tbody>
         </table>
       </div>

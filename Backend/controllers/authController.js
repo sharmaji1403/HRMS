@@ -51,7 +51,7 @@ const login = async(req , res) => {
 // GET /api/auth/session
 
 const session = async(req , res) =>{
-    const session = req.user
+    const session = req.session ;
     return res.json({user: session})
 }
 
@@ -62,7 +62,7 @@ const session = async(req , res) =>{
 
 const changePassword = async(req,res) =>{
     try {
-        const session = req.user;
+        const session = req.session ;
         const {currentPassword, newPassword} = req.body;
         if(!currentPassword || !newPassword){
             return res.status(400).json({error: "Both passwords are required"});

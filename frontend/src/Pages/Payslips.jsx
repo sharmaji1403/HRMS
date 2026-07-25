@@ -1,20 +1,26 @@
 import { useCallback, useEffect, useState } from "react"
-import { dummyPayslipData } from "../assets/assets"
 import Loading from "../components/Loading"
 import AdminPayslips from "../components/Admin/AdminPayslips"
 import EmployeePayslips from "../components/Employee/EmployeePayslips"
+import { useAuth } from "../Context/authContext"
+import toast from "react-hot-toast"
+import api from "../api/axios"
 
 const Payslips = () => {
+  const { user } = useAuth()
   const [payslips, setPayslips] = useState([])
   const [loading, setLoading] = useState(true)
+  const isAdmin = user?.role === "ADMIN"
 
-  const role = "EMPLOYEE" // "ADMIN" ya "EMPLOYEE"
-
-  const fetchPayslips = useCallback(() => {
-    setPayslips(dummyPayslipData)
-    setTimeout(() => {
+  const fetchPayslips = useCallback(async () => {
+    try {
+      const res = await api.get("/payslips")
+      setPayslips(res.data.data || [])
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message)
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }, [])
 
   useEffect(() => {
@@ -23,7 +29,7 @@ const Payslips = () => {
 
   if (loading) return <Loading />
 
-  if (role === "ADMIN") return <AdminPayslips payslips={payslips} />
+  if (isAdmin) return <AdminPayslips payslips={payslips} onRefresh={fetchPayslips} />
   return <EmployeePayslips payslips={payslips} />
 }
 

@@ -3,7 +3,9 @@ import { useEffect } from 'react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { dummyProfileData } from '../assets/assets'
-import { Calendar1Icon, ChevronRightIcon, DollarSignIcon, FileTextIcon, LayoutGridIcon, LogOutIcon, MenuIcon, Settings2Icon, User2Icon, XIcon } from 'lucide-react'
+import { Calendar1Icon, ChevronRightIcon, DollarSignIcon, FileTextIcon, LayoutGridIcon, LogOutIcon, MenuIcon, Settings2Icon, User2Icon, XIcon , Loader2Icon } from 'lucide-react'
+import { useAuth } from '../Context/authContext'
+import api from "../api/axios";
 
 const Sidebar = () => {
 
@@ -11,9 +13,12 @@ const Sidebar = () => {
     const [userName, setUsername] = useState('')
     const [mobileOpen, setMobileOpen] = useState(false)
 
+    const {user , loading, logout} = useAuth();
 
     useEffect(() => {
-        setUsername(dummyProfileData.firstName + " " + dummyProfileData.lastName)
+        api.get("/profile").then(({data}) => {
+            if(data.firstName) setUsername(`${data.firstName} ${data.lastName || " "}`.trim())
+        })
     }, [])
 
     // Close mobile sidebar on route change
@@ -21,18 +26,19 @@ const Sidebar = () => {
         setMobileOpen(false)
     }, [pathname])
 
-    const role = "Employee" ;
+    const role = user?.role ;
     const navItem = [
         { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
-        role === "Admin" ?
+        role ==="ADMIN" ?
             { name: "Employee", href: "/employees", icon: User2Icon } :
             { name: "Attendance", href: "/attendance", icon: Calendar1Icon },
-        { name: "Leave", href: "/leave", icon: FileTextIcon },
-        { name: "Payslips", href: "/payslips", icon: DollarSignIcon },
-        { name: "Settings", href: "/settings", icon: Settings2Icon },
+            { name: "Leave", href: "/leave", icon: FileTextIcon },
+            { name: "Payslips", href: "/payslips", icon: DollarSignIcon },
+            { name: "Settings", href: "/settings", icon: Settings2Icon },
     ]
 
     const handleLogOut = () => {
+        logout();
         window.location.href = "/login"
     }
 
@@ -68,7 +74,7 @@ const Sidebar = () => {
                         </div>
                         <div className='min-w-0'>
                             <p className='text-[13px] font-medium text-slate-200 truncate  '>{userName}</p>
-                            <p className='text-[11px] text-slate-500 truncate '> {role === "Admin" ? "Administrator" : "Employee"} </p>
+                            <p className='text-[11px] text-slate-500 truncate '> {role === "ADMIN" ? "Administrator" : "Employee"} </p>
                         </div>
                     </div>
                 </div>
@@ -82,7 +88,13 @@ const Sidebar = () => {
             {/* Navigation List  */}
 
             <div className='flex-1 px-3 space-y-0.5 overflow-y-auto'>
-                {navItem.map((item) => {
+                {loading ? (
+                    <div className='px-3 py-3 flex items-center gap-2 text-slate-500'>
+                       <Loader2Icon className = "animate-spin w-4 h-4"  />
+                       <span className='text-sm'>Loading...</span>
+                        </div>
+                ):(
+                    navItem.map((item) => {
                     const isActive = pathname.startsWith(item.href)
                     return (
                         <Link key={item.name} to={item.href} className={`group flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all duration-150 relative ${isActive ? " bg-indigo-500/12 text-indigo-300" : " text-slate-300 hover:text-white hover:bg-white/4"}`}>
@@ -93,7 +105,9 @@ const Sidebar = () => {
 
                         </Link>
                     )
-                })}
+                })
+                )}
+                
 
             </div>
 

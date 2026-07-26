@@ -9,7 +9,7 @@ const statusStyles = {
   PENDING: "badge-warning"
 }
 
-const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const formatDate = (d) => {
   const date = new Date(d)
   return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
@@ -139,35 +139,37 @@ const AdminLeave = ({ leaves, onRefresh }) => {
       </div>
 
       <div className="card overflow-hidden">
-        <table className="table-modern">
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Type</th>
-              <th>Dates</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaves.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="table-modern min-w-[700px]">
+            <thead>
               <tr>
-                <td colSpan={6} className="text-center text-slate-400 py-8">No leave applications found</td>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              leaves.map((leave) => (
-                <LeaveRow
-                  key={leave._id}
-                  leave={leave}
-                  allLeaves={leaves}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {leaves.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center text-slate-400 py-8">No leave applications found</td>
+                </tr>
+              ) : (
+                leaves.map((leave) => (
+                  <LeaveRow
+                    key={leave._id}
+                    leave={leave}
+                    allLeaves={leaves}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

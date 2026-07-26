@@ -83,41 +83,41 @@ const AdminEmployee = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Employees</h1>
-          <p className="text-slate-500 mt-1">Manage your team members</p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
-        >
-          <PlusIcon size={16} />
-          Add Employee
-        </button>
-      </div>
+      {/* Header — ✅ mobile pe stack, desktop pe side-by-side */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h1 className="text-2xl font-semibold text-slate-800">Employees</h1>
+    <p className="text-slate-500 mt-1">Manage your team members</p>
+  </div>
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors w-full sm:w-auto"
+  >
+    <PlusIcon size={16} />
+    Add Employee
+  </button>
+</div>
 
-      {/* Search + Filter */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative" style={{ flex: 1 }}>
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search employees..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <select
-          value={selectedDept}
-          onChange={(e) => setSelectedDept(e.target.value)}
-          style={{ width: "180px" }}
-        >
-          {departments.map(d => <option key={d}>{d}</option>)}
-        </select>
-      </div>
+{/* Search + Filter — ✅ mobile pe stack */}
+<div className="flex flex-col sm:flex-row gap-3 mb-6">
+  <div className="relative flex-1">
+    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+    <input
+      type="text"
+      placeholder="Search employees..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="pl-9 w-full"
+    />
+  </div>
+  <select
+    value={selectedDept}
+    onChange={(e) => setSelectedDept(e.target.value)}
+    className="w-full sm:w-[180px]"
+  >
+    {departments.map(d => <option key={d}>{d}</option>)}
+  </select>
+</div>
 
       {/* Employee Cards */}
       {filtered.length === 0 ? (

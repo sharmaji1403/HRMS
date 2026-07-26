@@ -2,10 +2,10 @@ import { UsersIcon, BuildingIcon, CalendarIcon, FileTextIcon } from "lucide-reac
 
 const AdminDashboard = ({ data }) => {
   const stats = [
-    { label: "Total Employees", value: data.totalEmployees ?? 3, icon: UsersIcon },
-    { label: "Departments", value: data.totalDepartments ?? 10, icon: BuildingIcon },
-    { label: "Today's Attendance", value: data.todayAttendance ?? 1, icon: CalendarIcon },
-    { label: "Pending Leaves", value: data.pendingLeaves ?? 1, icon: FileTextIcon },
+    { label: "Total Employees", value: data.totalEmployees ?? 0, icon: UsersIcon },
+    { label: "Departments", value: data.totalDepartments ?? 0, icon: BuildingIcon },
+    { label: "Today's Attendance", value: data.todayAttendance ?? 0, icon: CalendarIcon },
+    { label: "Pending Leaves", value: data.pendingLeaves ?? 0, icon: FileTextIcon },
   ]
 
   return (
@@ -15,17 +15,17 @@ const AdminDashboard = ({ data }) => {
         <p className="text-slate-500 mt-1">Welcome back, Admin — here's your overview</p>
       </div>
 
-      {/* Stats Row */}
-      <div className="flex gap-0 border border-slate-200 rounded-xl overflow-hidden bg-white mb-8">
-        {stats.map((stat, index) => {
+      {/* ✅ Mobile pe 2 columns, tablet+ pe 4 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <div key={stat.label} className={`flex-1 flex items-center justify-between p-6 ${index !== stats.length - 1 ? "border-r border-slate-200" : ""}`}>
-              <div>
-                <p className="text-sm text-slate-500 mb-2">{stat.label}</p>
-                <p className="text-3xl font-semibold text-slate-800">{stat.value}</p>
+            <div key={stat.label} className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs sm:text-sm text-slate-500">{stat.label}</p>
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300 shrink-0" strokeWidth={1.2} />
               </div>
-              <Icon className="w-8 h-8 text-slate-300" strokeWidth={1.2} />
+              <p className="text-2xl sm:text-3xl font-semibold text-slate-800">{stat.value}</p>
             </div>
           )
         })}

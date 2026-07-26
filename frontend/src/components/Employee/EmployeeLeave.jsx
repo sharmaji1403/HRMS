@@ -9,7 +9,7 @@ const statusStyles = {
   PENDING: "badge-warning"
 }
 
-const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const formatDate = (d) => {
   const date = new Date(d)
   return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
@@ -52,7 +52,7 @@ const ApplyLeaveModal = ({ onClose, onSubmit }) => {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Start Date</label>
               <input type="date" name="startDate" value={form.startDate} onChange={handleChange} />
@@ -138,32 +138,34 @@ const EmployeeLeave = ({ leaves, showModal, setShowModal, onRefresh }) => {
         <div className="px-6 py-4 border-b border-slate-100">
           <h3 className="font-medium text-slate-800">Leave History</h3>
         </div>
-        <table className="table-modern">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Dates</th>
-              <th>Reason</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaves.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="table-modern min-w-[600px]">
+            <thead>
               <tr>
-                <td colSpan={4} className="text-center text-slate-400 py-8">No leave records found</td>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Reason</th>
+                <th>Status</th>
               </tr>
-            ) : (
-              leaves.map((leave) => (
-                <tr key={leave._id}>
-                  <td><span className="badge bg-slate-100 text-slate-600">{leave.type}</span></td>
-                  <td className="text-slate-500">{formatDate(leave.startDate)} – {formatDate(leave.endDate)}</td>
-                  <td className="text-slate-500 max-w-[200px] truncate">{leave.reason}</td>
-                  <td><span className={`badge ${statusStyles[leave.status]}`}>{leave.status}</span></td>
+            </thead>
+            <tbody>
+              {leaves.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center text-slate-400 py-8">No leave records found</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                leaves.map((leave) => (
+                  <tr key={leave._id}>
+                    <td><span className="badge bg-slate-100 text-slate-600">{leave.type}</span></td>
+                    <td className="text-slate-500">{formatDate(leave.startDate)} – {formatDate(leave.endDate)}</td>
+                    <td className="text-slate-500 max-w-[200px] truncate">{leave.reason}</td>
+                    <td><span className={`badge ${statusStyles[leave.status]}`}>{leave.status}</span></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (
